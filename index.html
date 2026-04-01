@@ -1,52 +1,521 @@
-🍽️
-智慧叫貨系統
-⚠️ 5項警示
-4月2日 週四
-📊 儀表板
-🛒 叫貨
-🤖 AI分析
-📥 匯入
-🔴
-2
-缺貨危機
-⚠️
-5
-庫存警示
-📦
-65%
-平均庫存率
-📋
-8
-監控品項
-全部
-肉類
-蔬菜
-豆製品
-蛋品
-庫存總覽
-品名	分類	現有庫存	安全庫存	可用天	狀態	操作
-豬五花肉	肉類	
-3.5 kg
-5 kg	1.7天	庫存不足	編輯
-雞腿肉	肉類	
-12 kg
-8 kg	3.8天	即將不足	編輯
-高麗菜	蔬菜	
-2 kg
-6 kg	0.4天	缺貨危機	編輯
-青蔥	蔬菜	
-6 把
-10 把	1.6天	庫存不足	編輯
-豆腐	豆製品	
-8 盒
-12 盒	1.6天	庫存不足	編輯
-白蘿蔔	蔬菜	
-7 kg
-4 kg	3.9天	即將不足	編輯
-雞蛋	蛋品	
-25 顆
-60 顆	0.8天	缺貨危機	編輯
-豬絞肉	肉類	
-9 kg
-5 kg	3.6天	即將不足	編輯
 
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>叫貨管理系統</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Noto+Sans+TC:wght@300;400;500;700&family=DM+Mono:wght@300;400&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+<style>
+:root {
+  --bg: #080b0f;
+  --surface: #0d1117;
+  --surface2: #111820;
+  --border: rgba(180,150,90,0.15);
+  --border-bright: rgba(180,150,90,0.4);
+  --gold: #c9a84c;
+  --gold-light: #e2c97e;
+  --gold-dim: rgba(201,168,76,0.10);
+  --text: #e8e2d5;
+  --text-muted: #7a7060;
+  --text-dim: #2a2418;
+  --radius: 2px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: 'Noto Sans TC', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-weight: 300;
+}
+body::after {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold), transparent);
+  z-index: 999;
+  pointer-events: none;
+}
+::-webkit-scrollbar { width: 4px; height: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-bright); }
+
+.header {
+  background: rgba(8,11,15,0.97);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px;
+  position: sticky; top: 0; z-index: 100;
+}
+.header-top {
+  display: flex; align-items: center; justify-content: space-between; height: 60px;
+}
+.brand-name {
+  font-family: 'Cormorant Garamond', serif;
+  font-size: 22px; font-weight: 500;
+  color: var(--gold-light); letter-spacing: 0.15em;
+}
+.brand-sub {
+  font-size: 10px; color: var(--text-muted);
+  letter-spacing: 0.3em; margin-left: 12px; font-weight: 400;
+}
+.header-meta { display: flex; align-items: center; gap: 12px; }
+.meta-pill {
+  font-family: 'DM Mono', monospace; font-size: 10px;
+  padding: 4px 12px; border: 1px solid var(--border-bright);
+  color: var(--gold); letter-spacing: 0.1em;
+}
+.meta-pill.danger {
+  border-color: rgba(192,57,43,0.4); color: #e74c3c;
+  background: rgba(192,57,43,0.06); animation: pulse 2s infinite;
+}
+.meta-date { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--text-muted); }
+.nav { display: flex; border-top: 1px solid var(--border); overflow-x: auto; }
+.nav-btn {
+  background: none; border: none; cursor: pointer;
+  font-family: 'Noto Sans TC', sans-serif; font-size: 11px;
+  color: var(--text-muted); padding: 12px 22px;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  border-bottom: 1px solid transparent; transition: all 0.25s;
+  white-space: nowrap; margin-bottom: -1px;
+}
+.nav-btn:hover { color: var(--gold); }
+.nav-btn.active { color: var(--gold-light); border-bottom-color: var(--gold); }
+
+.main { max-width: 1200px; margin: 0 auto; padding: 32px; }
+
+.kpi-grid {
+  display: grid; grid-template-columns: repeat(4,1fr);
+  gap: 1px; background: var(--border);
+  border: 1px solid var(--border); margin-bottom: 28px;
+}
+.kpi-card {
+  background: var(--surface); padding: 22px 20px; position: relative; overflow: hidden;
+}
+.kpi-card::after {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+}
+.kpi-label { font-size: 10px; letter-spacing: 0.25em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 10px; }
+.kpi-val { font-family: 'Cormorant Garamond', serif; font-size: 34px; font-weight: 300; line-height: 1; }
+.kpi-unit { font-size: 12px; color: var(--text-muted); margin-left: 3px; }
+
+.filter-row { display: flex; gap: 6px; margin-bottom: 18px; overflow-x: auto; padding-bottom: 2px; }
+.f-btn {
+  background: none; border: 1px solid var(--border); color: var(--text-muted);
+  cursor: pointer; font-family: 'Noto Sans TC', sans-serif; font-size: 10px;
+  padding: 5px 14px; letter-spacing: 0.15em; transition: all 0.2s; white-space: nowrap;
+}
+.f-btn:hover { border-color: var(--gold); color: var(--gold); }
+.f-btn.on { background: var(--gold-dim); border-color: var(--gold); color: var(--gold-light); }
+
+.panel { background: var(--surface); border: 1px solid var(--border); overflow: hidden; }
+.panel-head {
+  padding: 14px 22px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.panel-title { font-family: 'Cormorant Garamond', serif; font-size: 16px; font-weight: 400; letter-spacing: 0.1em; }
+.panel-count { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--text-muted); }
+
+table { width: 100%; border-collapse: collapse; }
+th {
+  padding: 9px 20px; text-align: left; font-size: 9px;
+  letter-spacing: 0.3em; text-transform: uppercase; color: var(--text-muted);
+  background: rgba(0,0,0,0.25); font-weight: 400; border-bottom: 1px solid var(--border);
+}
+td { padding: 13px 20px; border-bottom: 1px solid rgba(180,150,90,0.05); font-size: 13px; font-weight: 300; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: rgba(201,168,76,0.02); }
+
+.st {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 10px; letter-spacing: 0.1em;
+  padding: 2px 10px; border-width: 1px; border-style: solid;
+}
+.st::before { content: ''; width: 3px; height: 3px; border-radius: 50%; background: currentColor; }
+
+.bar-w { height: 2px; background: rgba(255,255,255,0.06); width: 60px; margin-top: 5px; overflow: hidden; }
+.bar-f { height: 100%; transition: width 0.4s; }
+
+.e-btn {
+  background: none; border: 1px solid var(--border); color: var(--text-muted);
+  cursor: pointer; font-family: 'Noto Sans TC', sans-serif;
+  font-size: 10px; padding: 4px 12px; letter-spacing: 0.08em; transition: all 0.2s;
+}
+.e-btn:hover { border-color: var(--gold); color: var(--gold); }
+.s-btn {
+  background: var(--gold-dim); border: 1px solid var(--gold); color: var(--gold-light);
+  cursor: pointer; font-family: 'Noto Sans TC', sans-serif; font-size: 10px; padding: 4px 12px;
+}
+
+.cta {
+  background: var(--gold-dim); border: 1px solid var(--gold); color: var(--gold-light);
+  cursor: pointer; font-family: 'Noto Sans TC', sans-serif; font-size: 11px; font-weight: 400;
+  padding: 11px 28px; letter-spacing: 0.2em; text-transform: uppercase; transition: all 0.3s;
+}
+.cta:hover { background: rgba(201,168,76,0.18); }
+.cta:disabled { opacity: 0.35; cursor: not-allowed; }
+
+input[type=number], input[type=text], textarea {
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); font-family: 'DM Mono', monospace;
+  font-size: 12px; padding: 6px 10px; outline: none; transition: border 0.2s;
+}
+input:focus, textarea:focus { border-color: var(--gold); }
+
+.info-box {
+  background: var(--surface); border: 1px solid var(--border);
+  border-left: 1px solid var(--gold); padding: 24px 28px; position: relative;
+}
+
+.qty-n { font-family: 'Cormorant Garamond', serif; font-size: 22px; font-weight: 400; color: var(--gold-light); }
+.qty-0 { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--text-dim); }
+
+.note { font-size: 10px; color: var(--text-muted); letter-spacing: 0.06em; margin-top: 10px; line-height: 1.7; }
+.empty-s { text-align: center; padding: 60px; color: var(--text-muted); font-size: 11px; letter-spacing: 0.2em; }
+
+.hol-tag {
+  display: inline-block; font-family: 'DM Mono', monospace; font-size: 10px;
+  padding: 3px 9px; border: 1px solid var(--border); color: var(--gold);
+  letter-spacing: 0.06em; margin: 2px;
+}
+
+.day-ctrl {
+  display: flex; align-items: center; gap: 10px;
+  background: var(--surface); border: 1px solid var(--border); padding: 13px 18px;
+}
+.day-lbl { font-size: 10px; letter-spacing: 0.2em; color: var(--text-muted); text-transform: uppercase; }
+.day-inp { width: 44px; text-align: center; font-size: 20px; font-family: 'Cormorant Garamond', serif; border: none; background: transparent; color: var(--gold-light); }
+.day-u { font-size: 10px; color: var(--text-muted); letter-spacing: 0.15em; }
+
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+.fu { animation: fadeUp 0.35s ease forwards; }
+
+@media(max-width:768px){
+  .header,.main { padding-left:16px; padding-right:16px; }
+  .kpi-grid { grid-template-columns:repeat(2,1fr); }
+  .hm { display:none; }
+  .brand-sub { display:none; }
+  .nav-btn { padding:12px 12px; font-size:10px; }
+}
+</style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+const { useState } = React;
+
+const PRODUCTS = [
+  {id:1, name:"帝王蟹",       cat:"海鮮",    unit:"kg", ss:20,  cs:20,  ad:4   },
+  {id:2, name:"波士頓龍蝦",   cat:"海鮮",    unit:"隻", ss:30,  cs:30,  ad:6.5 },
+  {id:3, name:"麵包蟹",       cat:"海鮮",    unit:"隻", ss:20,  cs:20,  ad:4   },
+  {id:4, name:"黃金蟹",       cat:"海鮮",    unit:"隻", ss:15,  cs:15,  ad:2.5 },
+  {id:5, name:"紅蟳",         cat:"海鮮",    unit:"隻", ss:15,  cs:15,  ad:3   },
+  {id:6, name:"鮑魚",         cat:"海鮮",    unit:"顆", ss:100, cs:100, ad:20  },
+  {id:7, name:"日本生食干貝", cat:"海鮮加工",unit:"包", ss:20,  cs:20,  ad:4   },
+  {id:8, name:"天使紅蝦",     cat:"海鮮加工",unit:"盒", ss:15,  cs:15,  ad:3   },
+  {id:9, name:"海鱸魚",       cat:"海鮮加工",unit:"kg", ss:15,  cs:15,  ad:2.5 },
+  {id:10,name:"草蝦",         cat:"海鮮加工",unit:"盒", ss:20,  cs:20,  ad:4   },
+  {id:11,name:"冷凍白蝦",     cat:"海鮮加工",unit:"盒", ss:20,  cs:20,  ad:4   },
+  {id:12,name:"雞腿肉",       cat:"肉類",    unit:"kg", ss:30,  cs:30,  ad:6.5 },
+  {id:13,name:"牛五花",       cat:"肉類",    unit:"kg", ss:40,  cs:40,  ad:8   },
+  {id:14,name:"牛小排",       cat:"肉類",    unit:"kg", ss:30,  cs:30,  ad:6.5 },
+  {id:15,name:"日本和牛",     cat:"肉類",    unit:"kg", ss:20,  cs:20,  ad:4   },
+  {id:16,name:"梅花豬",       cat:"肉類",    unit:"kg", ss:25,  cs:25,  ad:5   },
+  {id:17,name:"培根豬",       cat:"肉類",    unit:"kg", ss:25,  cs:25,  ad:5   },
+];
+
+const HOLIDAYS = [
+  "2026-02-17","2026-02-18","2026-02-19","2026-02-20","2026-02-21",
+  "2026-10-09","2026-10-10","2026-05-10","2026-08-08",
+  "2025-01-28","2025-01-29","2025-01-30","2025-01-31","2025-02-01",
+  "2025-05-11","2025-08-08","2025-10-10",
+];
+const HOL_M = 1.6;
+const DOW_M = {0:1.35,6:1.3,1:0.85,2:0.85,3:0.9,4:1.0,5:1.2};
+const DLBL = ["週日","週一","週二","週三","週四","週五","週六"];
+
+function status(p) {
+  const d = p.cs/p.ad;
+  if (p.cs<=p.ss*0.5) return "缺貨危機";
+  if (p.cs<=p.ss)     return "庫存不足";
+  if (d>4)            return "庫存充足";
+  return "即將不足";
+}
+function stStyle(s) {
+  return {
+    "缺貨危機":{c:"#e74c3c",b:"rgba(231,76,60,0.28)"},
+    "庫存不足":{c:"#e67e22",b:"rgba(230,126,34,0.28)"},
+    "即將不足":{c:"#c9a84c",b:"rgba(201,168,76,0.28)"},
+    "庫存充足":{c:"#27ae60",b:"rgba(39,174,96,0.22)"},
+  }[s]||{c:"#888",b:"rgba(136,136,136,0.2)"};
+}
+function qty(p, days, hol, dow) {
+  const m = hol ? HOL_M : (DOW_M[dow]??1.0);
+  return Math.max(0, Math.ceil((p.ss*1.5 + p.ad*m*days - p.cs)*10)/10);
+}
+
+function App() {
+  const [tab, setTab]       = useState("dashboard");
+  const [cat, setCat]       = useState("全部");
+  const [prods, setProds]   = useState(PRODUCTS.map(p=>({...p,currentStock:p.cs,safetyStock:p.ss,avgDaily:p.ad})));
+  const [days, setDays]     = useState(2);
+  const [csv, setCsv]       = useState("");
+  const [imp, setImp]       = useState(0);
+  const [ai, setAi]         = useState("");
+  const [aiLoad, setAiLoad] = useState(false);
+  const [eid, setEid]       = useState(null);
+  const [ev, setEv]         = useState({});
+
+  const now     = new Date();
+  const nowStr  = now.toISOString().split("T")[0];
+  const isHol   = HOLIDAYS.includes(nowStr);
+  const dow     = now.getDay();
+  const dowLbl  = DLBL[dow];
+
+  const cats    = ["全部","海鮮","海鮮加工","肉類"];
+  const view    = cat==="全部" ? prods : prods.filter(p=>p.cat===cat);
+  const alerts  = prods.filter(p=>["缺貨危機","庫存不足"].includes(status(p)));
+  const crisis  = prods.filter(p=>status(p)==="缺貨危機").length;
+  const avgR    = Math.round(prods.reduce((s,p)=>s+p.currentStock/(p.safetyStock*1.5),0)/prods.length*100);
+
+  const se = p => { setEid(p.id); setEv({cs:p.currentStock,ss:p.safetyStock,ad:p.avgDaily}); };
+  const sv = id => { setProds(ps=>ps.map(p=>p.id===id?{...p,currentStock:ev.cs,safetyStock:ev.ss,avgDaily:ev.ad}:p)); setEid(null); };
+
+  function doImport(){
+    const rows = csv.trim().split("\n").slice(1).map(l=>{
+      const [n,c,u,cs,ss,ad]=l.split(",");
+      return {id:Date.now()+Math.random(),name:n?.trim(),cat:c?.trim(),unit:u?.trim(),
+        currentStock:parseFloat(cs)||0,safetyStock:parseFloat(ss)||0,avgDaily:parseFloat(ad)||0};
+    }).filter(r=>r.name);
+    setImp(rows.length);
+    if(rows.length) setProds(p=>[...p.filter(x=>!rows.find(r=>r.name===x.name)),...rows]);
+  }
+
+  async function doAI(){
+    setAiLoad(true); setAi("");
+    const body = prods.map(p=>({
+      name:p.name, category:p.cat, currentStock:p.currentStock,
+      safetyStock:p.safetyStock, avgDaily:p.avgDaily, status:status(p),
+      orderQty:qty(p,days,isHol,dow)
+    }));
+    const prompt=`你是一位高級海鮮餐廳的採購顧問，請根據以下庫存與銷售數據，提供專業的叫貨建議與毛利提升策略。請用繁體中文回答，結構清晰，分點說明：\n\n${JSON.stringify(body,null,2)}\n\n今天是否為假日：${isHol?"是":"否"}，預計叫貨天數：${days}天\n\n請針對：1.即將缺貨品項的緊急建議 2.假日叫貨量調整策略 3.降低缺貨率的建議 4.海鮮類毛利提升機會`;
+    try {
+      const r = await fetch("https://api.anthropic.com/v1/messages",{
+        method:"POST",headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,messages:[{role:"user",content:prompt}]})
+      });
+      const d = await r.json();
+      setAi(d.content?.map(c=>c.text).join("\n")||"無法取得分析結果");
+    } catch { setAi("AI 分析失敗，請確認網路連線後再試。"); }
+    setAiLoad(false);
+  }
+
+  return (
+    <div>
+      <div className="header">
+        <div className="header-top">
+          <div style={{display:"flex",alignItems:"baseline"}}>
+            <span className="brand-name">叫貨管理</span>
+            <span className="brand-sub">Procurement System</span>
+          </div>
+          <div className="header-meta">
+            {isHol && <span className="meta-pill">假日 ×1.6</span>}
+            {alerts.length>0 && <span className="meta-pill danger">⚑ {alerts.length} 警示</span>}
+            <span className="meta-date">{now.toLocaleDateString("zh-TW",{month:"2-digit",day:"2-digit"})} {dowLbl}</span>
+          </div>
+        </div>
+        <nav className="nav">
+          {[["dashboard","儀表板"],["order","叫貨清單"],["ai","AI 分析"],["import","匯入數據"]].map(([k,l])=>(
+            <button key={k} className={`nav-btn${tab===k?" active":""}`} onClick={()=>setTab(k)}>{l}</button>
+          ))}
+        </nav>
+      </div>
+
+      <div className="main">
+
+        {tab==="dashboard" && (
+          <div className="fu">
+            <div className="kpi-grid">
+              {[
+                {l:"缺貨危機",v:crisis,u:"項",c:"#e74c3c"},
+                {l:"庫存警示",v:alerts.length,u:"項",c:"#e67e22"},
+                {l:"平均庫存率",v:avgR,u:"%",c:"#27ae60"},
+                {l:"監控品項",v:prods.length,u:"項",c:"#c9a84c"},
+              ].map(k=>(
+                <div key={k.l} className="kpi-card">
+                  <div className="kpi-label">{k.l}</div>
+                  <div className="kpi-val" style={{color:k.c}}>{k.v}<span className="kpi-unit">{k.u}</span></div>
+                </div>
+              ))}
+            </div>
+
+            <div className="filter-row">
+              {cats.map(c=>(
+                <button key={c} className={`f-btn${cat===c?" on":""}`} onClick={()=>setCat(c)}>{c}</button>
+              ))}
+            </div>
+
+            <div className="panel">
+              <div className="panel-head">
+                <span className="panel-title">庫存總覽</span>
+                <span className="panel-count">{view.length} ITEMS</span>
+              </div>
+              <div style={{overflowX:"auto"}}>
+                <table>
+                  <thead><tr>
+                    <th>品名</th><th className="hm">分類</th>
+                    <th>現有庫存</th><th className="hm">安全庫存</th>
+                    <th>可用天數</th><th>狀態</th><th></th>
+                  </tr></thead>
+                  <tbody>
+                    {view.map(p=>{
+                      const st=status(p), ss=stStyle(st);
+                      const dl=(p.currentStock/p.avgDaily).toFixed(1);
+                      const ed=eid===p.id;
+                      const pct=Math.min(100,Math.round(p.currentStock/(p.safetyStock*1.5)*100));
+                      const bc=pct<50?"#c0392b":pct<75?"#d35400":"#27ae60";
+                      return(
+                        <tr key={p.id}>
+                          <td style={{letterSpacing:"0.02em"}}>{p.name}</td>
+                          <td className="hm" style={{color:"var(--text-muted)",fontSize:11,letterSpacing:"0.1em"}}>{p.cat}</td>
+                          <td>
+                            {ed?<input type="number" value={ev.cs} onChange={e=>setEv(v=>({...v,cs:parseFloat(e.target.value)}))} style={{width:62}}/>
+                            :<div>
+                              <span style={{fontFamily:"'DM Mono',monospace",fontSize:13}}>{p.currentStock}</span>
+                              <span style={{fontSize:10,color:"var(--text-muted)",marginLeft:3}}>{p.unit}</span>
+                              <div className="bar-w"><div className="bar-f" style={{width:pct+"%",background:bc}}/></div>
+                            </div>}
+                          </td>
+                          <td className="hm">
+                            {ed?<input type="number" value={ev.ss} onChange={e=>setEv(v=>({...v,ss:parseFloat(e.target.value)}))} style={{width:62}}/>
+                            :<span style={{fontFamily:"'DM Mono',monospace",fontSize:12}}>{p.safetyStock}<span style={{fontSize:10,color:"var(--text-muted)",marginLeft:3}}>{p.unit}</span></span>}
+                          </td>
+                          <td style={{fontFamily:"'DM Mono',monospace",fontSize:13,color:parseFloat(dl)<2?"#e74c3c":"var(--text)"}}>{dl}</td>
+                          <td><span className="st" style={{color:ss.c,borderColor:ss.b}}>{st}</span></td>
+                          <td>{ed
+                            ?<button className="s-btn" onClick={()=>sv(p.id)}>確認</button>
+                            :<button className="e-btn" onClick={()=>se(p)}>編輯</button>}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <p className="note">※ 請於每日開始營業前更新現有庫存數量，以確保叫貨建議準確</p>
+          </div>
+        )}
+
+        {tab==="order" && (
+          <div className="fu">
+            <div style={{display:"flex",gap:14,marginBottom:26,flexWrap:"wrap",alignItems:"center"}}>
+              <div className="day-ctrl">
+                <span className="day-lbl">叫貨天數</span>
+                <input type="number" className="day-inp" min={1} max={7} value={days} onChange={e=>setDays(parseInt(e.target.value)||1)}/>
+                <span className="day-u">天</span>
+              </div>
+              <div className="day-ctrl">
+                <span className="day-lbl">今日係數</span>
+                <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:20,color:"var(--gold-light)",margin:"0 6px"}}>
+                  ×{isHol?HOL_M:(DOW_M[dow]??1.0)}
+                </span>
+                <span className="day-u">{dowLbl}{isHol?" · 假日":""}</span>
+              </div>
+            </div>
+            <div className="panel">
+              <div className="panel-head">
+                <span className="panel-title">叫貨清單</span>
+                <span className="panel-count">{days} 天備貨</span>
+              </div>
+              <div style={{overflowX:"auto"}}>
+                <table>
+                  <thead><tr>
+                    <th>品名</th><th className="hm">分類</th>
+                    <th className="hm">現有庫存</th><th className="hm">日均消耗</th>
+                    <th>建議叫貨量</th><th>狀態</th>
+                  </tr></thead>
+                  <tbody>
+                    {prods.map(p=>{
+                      const q=qty(p,days,isHol,dow), st=status(p), ss=stStyle(st);
+                      return(
+                        <tr key={p.id}>
+                          <td>{p.name}</td>
+                          <td className="hm" style={{color:"var(--text-muted)",fontSize:11}}>{p.cat}</td>
+                          <td className="hm" style={{fontFamily:"'DM Mono',monospace",fontSize:12}}>{p.currentStock}<span style={{fontSize:10,color:"var(--text-muted)",marginLeft:3}}>{p.unit}</span></td>
+                          <td className="hm" style={{fontFamily:"'DM Mono',monospace",fontSize:12}}>{p.avgDaily}<span style={{fontSize:10,color:"var(--text-muted)",marginLeft:3}}>{p.unit}/日</span></td>
+                          <td>{q>0
+                            ?<span><span className="qty-n">{q}</span><span style={{fontSize:11,color:"var(--text-muted)",marginLeft:5}}>{p.unit}</span></span>
+                            :<span className="qty-0">—</span>}
+                          </td>
+                          <td><span className="st" style={{color:ss.c,borderColor:ss.b}}>{st}</span></td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <p className="note">※ 叫貨量 = 安全庫存 × 1.5 + 預計需求 − 現有庫存　假日 ×1.6 · 週六 ×1.3 · 週日 ×1.35</p>
+          </div>
+        )}
+
+        {tab==="ai" && (
+          <div className="fu">
+            <div className="info-box" style={{marginBottom:20}}>
+              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:20,fontWeight:400,letterSpacing:"0.08em",marginBottom:8}}>AI 採購顧問</div>
+              <p style={{color:"var(--text-muted)",fontSize:12,lineHeight:1.9,marginBottom:20,letterSpacing:"0.04em"}}>
+                根據目前庫存、銷售數據與假日資訊，提供專業叫貨策略、缺貨預防與毛利提升建議。
+              </p>
+              <button className="cta" onClick={doAI} disabled={aiLoad}>{aiLoad?"分析中 ···":"開始分析"}</button>
+            </div>
+            {ai && (
+              <div className="panel fu" style={{padding:28}}>
+                <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:18,color:"var(--gold-light)",letterSpacing:"0.08em",marginBottom:18,paddingBottom:14,borderBottom:"1px solid var(--border)"}}>分析報告</div>
+                <div style={{whiteSpace:"pre-wrap",lineHeight:2,fontSize:13,color:"rgba(232,226,213,0.75)",fontWeight:300}}>{ai}</div>
+              </div>
+            )}
+            {!ai&&!aiLoad&&<div className="empty-s">點擊上方按鈕，開始 AI 分析</div>}
+          </div>
+        )}
+
+        {tab==="import" && (
+          <div className="fu">
+            <div className="info-box" style={{marginBottom:20}}>
+              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:20,fontWeight:400,letterSpacing:"0.08em",marginBottom:12}}>匯入 POS 數據</div>
+              <p style={{color:"var(--text-muted)",fontSize:11,lineHeight:1.9,marginBottom:14,letterSpacing:"0.05em"}}>請貼上 CSV 內容，欄位順序如下：</p>
+              <div style={{background:"var(--surface2)",border:"1px solid var(--border)",padding:"8px 14px",marginBottom:14,fontFamily:"'DM Mono',monospace",fontSize:11,color:"var(--gold)",letterSpacing:"0.08em"}}>
+                品名, 分類, 單位, 現有庫存, 安全庫存, 日均消耗
+              </div>
+              <div style={{background:"var(--surface2)",border:"1px solid var(--border)",padding:"10px 14px",marginBottom:14,fontFamily:"'DM Mono',monospace",fontSize:11,color:"var(--text-muted)",lineHeight:2}}>
+                帝王蟹, 海鮮, kg, 18, 20, 4<br/>牛五花, 肉類, kg, 35, 40, 8
+              </div>
+              <textarea rows={7} value={csv} onChange={e=>setCsv(e.target.value)}
+                placeholder={"品名,分類,單位,現有庫存,安全庫存,日均消耗\n帝王蟹,海鮮,kg,18,20,4"}
+                style={{width:"100%",fontSize:12,resize:"vertical",marginBottom:14,lineHeight:1.8}}/>
+              <button className="cta" onClick={doImport}>匯入數據</button>
+              {imp>0&&<p style={{marginTop:10,color:"#27ae60",fontSize:11,letterSpacing:"0.06em"}}>✓ 已匯入 {imp} 筆品項</p>}
+            </div>
+            <div className="info-box">
+              <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:18,fontWeight:400,letterSpacing:"0.08em",marginBottom:12}}>特殊假日設定</div>
+              <p style={{color:"var(--text-muted)",fontSize:11,letterSpacing:"0.06em",marginBottom:14}}>以下日期叫貨量自動 ×1.6（農曆春節 · 國慶連假 · 母親節 · 父親節）</p>
+              <div>{HOLIDAYS.sort().map(d=><span key={d} className="hol-tag">{d}</span>)}</div>
+            </div>
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
